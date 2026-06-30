@@ -1,14 +1,14 @@
-# diy-lead-enrichment
+# DIY lead enrichment and lead scoring
 
-Build your own inbound lead enrichment + scoring pipeline for about **$0.004 per lead** — instead of ~$0.18 on Clay or ~$0.30 on Crustdata pay-as-you-go.
+At Maven, I built an in-house lead enrichment + scoring pipeline for about **$0.004 per lead** — instead of ~$0.18 on Clay or ~$0.30 on Crustdata pay-as-you-go. I built our original Clay -> CRM sync but the costs quickly accumulated, costing us $700+/month for only 2-3k leads/month. We were growing our outbound and inbound and this simply wasn't scalable for us. So, I used Claude Code to build my own lead enrichment + lead scoring workflow, and I'm sharing this guide so you can do it yourself!
 
-This isn't a library you install. It's a **build spec you hand to a coding agent** (Claude Code, Codex, Cursor) plus a scoring skeleton you fill in with your own judgment. Read [`BUILD.md`](BUILD.md), fill in [`scoring/lead_score.template.py`](scoring/lead_score.template.py) with your own model, then point your agent at `BUILD.md` and let it wire up the rest against your CRM.
+## What's in this:
+- Read [`BUILD.md`](BUILD.md) -> point your agent at `BUILD.md` and let it wire up the rest against your CRM.
+- Fill in [`scoring/lead_score.template.py`](scoring/lead_score.template.py) with your own scoring thresholds
 
-I built the original to replace a Clay → CRM sync. The design and the cost numbers are real. The parts that are specific to my business — the exact scoring weights, audience thresholds, and curated company list — are left as blanks on purpose, because yours should be different.
+## CRM enrichment comparisons
 
-## Why bother
-
-Clay, Crustdata, and friends are convenient, but you're paying a heavy per-lead margin for two things you can do yourself: (1) calling a LinkedIn scraper, and (2) running an if/else scoring formula. Do those two directly and the cost drops ~45–75×.
+I've explored a number of enrichment tools like Clay, Crustdata, Reverse Contact, and Apify, but you're paying a heavy per-lead margin for two things you can do yourself: (1) calling a LinkedIn scraper, and (2) running an if/else scoring formula. Do those two directly and the cost drops ~45–75×.
 
 | Provider | Pricing model | ~Cost to enrich 1 lead | vs. DIY |
 |----------|---------------|-----------------------:|--------:|
