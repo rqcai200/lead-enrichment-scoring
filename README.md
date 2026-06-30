@@ -20,12 +20,12 @@ That's profile enrichment. The optional posting-activity pass (see below) adds r
 
 ## What you'll need
 
-| Piece | Role | Required? |
-|-------|------|-----------|
-| **A CRM with a REST API** | Read new leads; write back the enriched fields + score. I used **Attio**; HubSpot, Salesforce, Pipedrive, Airtable, etc. all work the same way (records + an update endpoint). | Required |
-| **Apify account + token** | The enrichment engine — runs the LinkedIn scrapers. Pay-as-you-go, billed on actual usage. | Required |
-| **An email→profile lookup** | Fallback for leads that arrive as an email with no LinkedIn URL (e.g. Reverse Contact). | Optional |
-| **A cheap LLM API** | The "wrong-person" guard — judges whether a scraped profile is actually the lead (e.g. Gemini Flash, or any small model). | Optional |
+| Piece | Role | Pricing | Required? |
+|-------|------|---------|-----------|
+| **A CRM with a REST API** | Read new leads; write back the enriched fields + score. I used **Attio**; HubSpot, Salesforce, Pipedrive, Airtable, etc. all work the same way (records + an update endpoint). | Whatever you already pay — the API is included | Required |
+| **Apify account + token** | The enrichment engine — runs the LinkedIn scrapers. Usage-based, so you pay for compute, not seats. | Free tier = $5 credits/mo (~1,200 profiles); paid plans from **$29/mo**. You burn only ~$0.004 of compute per lead. | Required |
+| **An email→profile lookup** (e.g. Reverse Contact) | Fallback for leads that arrive as an email with no LinkedIn URL. Skip it if your leads come with LinkedIn URLs. | From **$99/mo** for 2,000 credits (~$0.05 / matched contact); free on a no-match | Optional |
+| **A cheap LLM API** (e.g. Gemini Flash) | The "wrong-person" guard — judges whether a scraped profile is actually the lead. | Pennies — only fires on name mismatches | Optional |
 
 No Clay, no Zapier/n8n, no per-task automation fees. The whole thing runs itself on free GitHub Actions cron.
 
