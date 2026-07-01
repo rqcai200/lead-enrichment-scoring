@@ -2,9 +2,12 @@
 
 At Maven, I built an in-house lead enrichment + scoring pipeline for about **$0.004 per lead** — instead of ~$0.18 on Clay or ~$0.30 on Crustdata pay-as-you-go. I built our original Clay -> CRM sync but the costs quickly accumulated, costing us $700+/month for only 2-3k leads/month. We were growing our outbound and inbound and this simply wasn't scalable for us. So, I used Claude Code to build my own lead enrichment + lead scoring workflow, and I'm sharing this guide so you can do it yourself!
 
-## What's in this:
-- Read [`BUILD.md`](BUILD.md) -> point your agent at `BUILD.md` and let it wire up the rest against your CRM.
-- Fill in [`scoring/lead_score.template.py`](scoring/lead_score.template.py) with your own scoring thresholds
+- ## How to use this repo
+
+1. **Read [`BUILD.md`](BUILD.md)** - this is what you will give to your coding agent to build the workflow
+2. **Fill in [`scoring/lead_score.template.py`](scoring/lead_score.template.py)** — this is the one part only you need to write. The skeleton shows the structure (audience floor, title/company tiers, weighted blend, activity gate); you decide the weights and thresholds for *your* definition of a good lead.
+3. **Copy [`.env.example`](.env.example) to `.env`** and fill in your tokens.
+4. **Hand `BUILD.md` to your agent** ("implement this against my CRM") and let it generate the enrich → score → write-back pipeline and the GitHub Actions workflow. A starter prompt is at the bottom of `BUILD.md`.
 
 ## CRM enrichment comparisons
 
@@ -24,14 +27,13 @@ That's profile enrichment. The optional posting-activity pass (see below) adds r
 |-------|------|---------|-----------|
 | **A CRM with a REST API** | Read new leads; write back the enriched fields + score. I used **Attio**; HubSpot, Salesforce, Pipedrive, Airtable, etc. all work the same way (records + an update endpoint). | Whatever you already pay — the API is included | Required |
 | **Apify account + token** | The enrichment engine — runs the LinkedIn scrapers. Usage-based, so you pay for compute, not seats. | Free tier = $5 credits/mo (~1,200 profiles); paid plans from **$29/mo**. You burn only ~$0.004 of compute per lead. | Required |
-| **An email→profile lookup** (e.g. Reverse Contact) | Fallback for leads that arrive as an email with no LinkedIn URL. Skip it if your leads come with LinkedIn URLs. | From **$99/mo** for 2,000 credits (~$0.05 / matched contact); free on a no-match | Optional |
-| **A cheap LLM API** (e.g. Gemini Flash) | The "wrong-person" guard — judges whether a scraped profile is actually the lead. | Pennies — only fires on name mismatches | Optional |
-
-No Clay, no Zapier/n8n, no per-task automation fees. The whole thing runs itself on free GitHub Actions cron.
+| **A backup email→profile lookup (optional)** (e.g. Reverse Contact, Clay) | Fallback for leads that arrive as an email with no LinkedIn URL. The agent will default to Apify because it's cheapest but then go through the more expensive options if the profile cannot be found. Reverse Contact is $99/mo for 2,000 credits (~$0.05 / matched contact); free on a no-match 
+| **An LLM API to act as a judge** (e.g. Gemini Flash) | You will use this to verify if the scraped profile actually matches the lead
+| **Github Actions** | The whole thing runs itself on free GitHub Actions cron.
 
 ## The Apify actors I used
 
-All public Apify Marketplace actors. Costs are approximate and billed as Apify usage.
+These are the Apify actors I got the best results with: 
 
 | Actor | Gives you | ~Cost |
 |-------|-----------|------:|
@@ -40,7 +42,7 @@ All public Apify Marketplace actors. Costs are approximate and billed as Apify u
 | `apidojo/twitter-user-scraper` | Twitter/X follower count (if you score on Twitter audience) | ~$0.0006 / handle |
 | `digispruce/substack-scraper` | Substack subscriber count (if you score on newsletter audience) | ~$0.003 / newsletter |
 
-Swap in whatever actors you prefer — the pipeline only cares that profile enrichment returns the fields your scorer reads.
+Swap in whatever actors you prefer based on the enrichment fields you need!
 
 ## Architecture
 
@@ -52,23 +54,20 @@ Swap in whatever actors you prefer — the pipeline only cares that profile enri
    │ 1 · ENRICH                                     │
    │    Apify LinkedIn profile scraper   (~$0.004)  │
    │    email-only lead?  → reverse-lookup fallback │
-   │    wrong-person guard (blocklist + name + LLM) │
    └──────────────────────────────────────────────┘
             │
             ▼
    ┌──────────────────────────────────────────────┐
-   │ 2 · SCORE  →  1 / 2 / 3                         │
-   │    your model, runs locally, free              │
-   │    audience + title + company  →  blend        │
-   │    activity gate: pull recent posts            │
+   │ 2 · LEAD SCORE  →                              │
+   │    Based on the formula/weights you set,       │
+   │    such as company size/followers/job title    │
    │    (~$0.01, strong leads only)                 │
    └──────────────────────────────────────────────┘
             │
             ▼
    ┌──────────────────────────────────────────────┐
    │ 3 · WRITE BACK to the CRM (REST PATCH)         │
-   │    score · title · company · followers ·       │
-   │    location · last_enriched_at                 │
+   │    score · enriched data · last_enriched_at    │
    └──────────────────────────────────────────────┘
             │
             ▼
@@ -81,27 +80,22 @@ Swap in whatever actors you prefer — the pipeline only cares that profile enri
             └──────── runs on GitHub Actions cron ──────────
 ```
 
-## How to use this repo
 
-1. **Read [`BUILD.md`](BUILD.md)** — the full spec, written so a coding agent can implement it end-to-end.
-2. **Fill in [`scoring/lead_score.template.py`](scoring/lead_score.template.py)** — this is the one part only you can write. The skeleton shows the structure (audience floor, title/company tiers, weighted blend, activity gate); you decide the weights and thresholds for *your* definition of a good lead.
-3. **Copy [`.env.example`](.env.example) to `.env`** and fill in your tokens.
-4. **Hand `BUILD.md` to your agent** ("implement this against my CRM") and let it generate the enrich → score → write-back pipeline and the GitHub Actions workflow. A starter prompt is at the bottom of `BUILD.md`.
 
-## The one idea worth stealing: the activity gate
+## For creator sourcing, check engagement rates
 
-A follower count is a *static* signal. It tells you someone was once worth following — not whether they still create. For most lead definitions (mine was "would make a good course instructor / creator"), what you actually want to know is: **does this person regularly post original content?**
+At Maven we are identifying high potential expert creators who could sell a top-selling product on our platform. A follower count is a *static* signal and does not reflect the engagement of their audience. We mainly want to check for **does this person regularly post original high quality content with high engagement?**
 
 So after the base score, pull the lead's recent posts and gate on real activity:
 
-- **Dormant** (no original post in months) → cap the score, even with a great title and a marquee logo. A "Founder & CEO, ex-FAANG, 5k followers" who hasn't posted since last year is not the lead the logo makes them look like.
-- **Active** (posting regularly with real engagement) → lift the score.
+- **Dormant** (no original post in months) → even with a great title and a marquee logo like a "Founder & CEO, ex-FAANG, 5k followers", if they haven't posted since last year, it is not necessarily a great when identifying high potential creators.
+- **Active** (posting regularly with real engagement) may lift the score.
 
-Reposts don't count — they're low-effort and carry someone else's reach. You only spend the extra posts-scrape on leads that already scored well, so it costs almost nothing and removes a whole class of false positives. Define your own recency / frequency / engagement thresholds in the template.
+Reposts don't count in the model. Generally, this scrape costs almost nothing and removes a whole class of false positives. Make sure to define your own recency / frequency / engagement thresholds in the template.
 
-## The other guard: don't enrich the wrong human
+## The other guard: don't enrich the wrong person!
 
-The pipeline scrapes whatever LinkedIn URL is on the record. A placeholder or a pasted celebrity URL will faithfully enrich the wrong person — a test lead with a junk URL once enriched as a public figure with millions of followers and auto-scored top-tier. Two cheap guards stop this:
+The pipeline scrapes whatever LinkedIn URL is on the record. Some leads put in a fake LinkedIn URL (like Barack Obama) and you don't want to enrich the wrong person. Two guards stop this:
 
 1. A **placeholder blocklist** (`/in/your-name`, `/in/test`, `/in/john-doe`) dropped before scraping.
 2. A **name match** between the lead and the scraped profile; only a real mismatch gets sent to a cheap LLM arbiter that rejects on a confident "different person." Rejected leads aren't scored.
