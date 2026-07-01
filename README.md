@@ -11,8 +11,6 @@ At Maven, I built our original Clay → CRM sync but the costs accumulated, runn
 3. **Copy [`.env.example`](.env.example) to `.env`** and fill in your tokens.
 4. **Hand `BUILD.md` to your agent** ("implement this against my CRM") and let it generate the enrich → score → write-back pipeline and the GitHub Actions workflow. A starter prompt is at the bottom of `BUILD.md`.
 
-> **Note:** This repo is a **build spec plus the one piece of real logic (the scorer), by design.** The full pipeline runs against my employer's CRM, so what's here is everything you need to regenerate it against your own.
-
 ## CRM enrichment comparisons
 
 I've explored a number of enrichment tools like Clay, Crustdata, Reverse Contact, and Apify, but you're paying a heavy per-lead margin for two things you can do yourself: (1) calling a LinkedIn scraper, and (2) running an if/else scoring formula. Do those two directly and the cost drops ~45–75×.
