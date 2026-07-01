@@ -2,9 +2,9 @@
 
 At Maven, I built our original Clay -> CRM sync but the costs accumulated, costing us $700+/month for only 2-3k leads/month. We were growing our outbound and inbound and this simply wasn't scalable for us. So, I used Claude Code to build my own lead enrichment + lead scoring workflow which costs **$0.004 per lead** — instead of ~$0.18 on Clay or $0.10-$0.30 on Crustdata. I'm sharing this guide so you can build one yourself!
 
-- ## How to use this repo
+## How to use this repo
 
-1. **Read [`BUILD.md`](BUILD.md)** - this is what you will give to your coding agent to build the workflow
+1. **Read this README.md and [`BUILD.md`](BUILD.md)** - this is what you will give to your coding agent to build the workflow
 2. **Fill in [`scoring/lead_score.template.py`](scoring/lead_score.template.py)** — this is the one part only you need to write. The skeleton shows the structure (audience floor, title/company tiers, weighted blend, activity gate); you decide the weights and thresholds for *your* definition of a good lead.
 3. **Copy [`.env.example`](.env.example) to `.env`** and fill in your tokens.
 4. **Hand `BUILD.md` to your agent** ("implement this against my CRM") and let it generate the enrich → score → write-back pipeline and the GitHub Actions workflow. A starter prompt is at the bottom of `BUILD.md`.
