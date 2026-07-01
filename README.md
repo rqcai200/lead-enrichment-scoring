@@ -1,6 +1,8 @@
 # DIY lead enrichment and lead scoring
 
-At Maven, I built our original Clay -> CRM sync but the costs accumulated, costing us $700+/month for only 2-3k leads/month. We were growing our outbound and inbound and this simply wasn't scalable for us. So, I used Claude Code to build my own lead enrichment + lead scoring workflow which costs **$0.004 per lead** — instead of ~$0.18 on Clay or $0.10-$0.30 on Crustdata. I'm sharing this guide so you can build one yourself!
+Enrich and score inbound leads for **~$0.004 each** instead of ~$0.18 on Clay or $0.10–$0.30 on Crustdata — and refresh a ~25k-contact CRM on a monthly rotation for ~$100–150/mo instead of thousands.
+
+At Maven, I built our original Clay → CRM sync but the costs accumulated, running $700+/month for only 2-3k leads/month. We were growing our outbound and inbound and this simply wasn't scalable for us. So, I used Claude Code to build my own lead enrichment + lead scoring workflow which costs **$0.004 per lead**. I'm sharing this guide so you can build one yourself!
 
 ## How to use this repo
 
@@ -8,6 +10,8 @@ At Maven, I built our original Clay -> CRM sync but the costs accumulated, costi
 2. **Fill in [`scoring/lead_score.template.py`](scoring/lead_score.template.py)** — this is the one part only you need to write. The skeleton shows the structure (audience floor, title/company tiers, weighted blend, activity gate); you decide the weights and thresholds for *your* definition of a good lead.
 3. **Copy [`.env.example`](.env.example) to `.env`** and fill in your tokens.
 4. **Hand `BUILD.md` to your agent** ("implement this against my CRM") and let it generate the enrich → score → write-back pipeline and the GitHub Actions workflow. A starter prompt is at the bottom of `BUILD.md`.
+
+> **Note:** This repo is a **build spec plus the one piece of real logic (the scorer), by design.** The full pipeline runs against my employer's CRM, so what's here is everything you need to regenerate it against your own — not a copy of the internal implementation.
 
 ## CRM enrichment comparisons
 
@@ -27,9 +31,9 @@ That's profile enrichment. The optional posting-activity pass (see below) adds r
 |-------|------|---------|-----------|
 | **A CRM with a REST API** | Read new leads; write back the enriched fields + score. I used **Attio**; HubSpot, Salesforce, Pipedrive, Airtable, etc. all work the same way (records + an update endpoint). | Whatever you already pay — the API is included | Required |
 | **Apify account + token** | The enrichment engine — runs the LinkedIn scrapers. Usage-based, so you pay for compute, not seats. | Free tier = $5 credits/mo (~1,200 profiles); paid plans from **$29/mo**. You burn only ~$0.004 of compute per lead. | Required |
-| **A backup email→profile lookup (optional)** (e.g. Reverse Contact, Clay) | Fallback for leads that arrive as an email with no LinkedIn URL. The agent will default to Apify because it's cheapest but then go through the more expensive options if the profile cannot be found. Reverse Contact is $99/mo for 2,000 credits (~$0.05 / matched contact); free on a no-match 
-| **An LLM API to act as a judge** (e.g. Gemini Flash) | You will use this to verify if the scraped profile actually matches the lead
-| **Github Actions** | The whole thing runs itself on free GitHub Actions cron.
+| **A backup email→profile lookup** (e.g. Reverse Contact, Clay) | Fallback for leads that arrive as an email with no LinkedIn URL. The pipeline defaults to Apify (cheapest) and only reaches for the pricier lookup when the profile can't be found. | Reverse Contact ~$99/mo for 2,000 credits (~$0.05 / matched contact); no charge on a no-match. | Optional |
+| **An LLM API to act as a judge** (e.g. Gemini Flash) | Verifies the scraped profile actually matches the lead — the wrong-person guard. | Fractions of a cent per check; only runs on name mismatches. | Optional |
+| **GitHub Actions** | Runs the whole thing on a cron schedule — no server to host. | Free for public repos. | Required for automation |
 
 ## The Apify actors I used
 
@@ -58,10 +62,10 @@ Swap in whatever actors you prefer based on the enrichment fields you need!
             │
             ▼
    ┌──────────────────────────────────────────────┐
-   │ 2 · LEAD SCORE  →                              │
-   │    Based on the formula/weights you set,       │
-   │    such as company size/followers/job title    │
-   │    (~$0.01, strong leads only)                 │
+   │ 2 · SCORE — local formula you write (free)     │
+   │    audience · title · company (weighted)       │
+   │    then a posts pass on strong leads only      │
+   │    to gate on real activity   (~$0.01)         │
    └──────────────────────────────────────────────┘
             │
             ▼
@@ -80,7 +84,7 @@ Swap in whatever actors you prefer based on the enrichment fields you need!
             └──────── runs on GitHub Actions cron ──────────
 ```
 
-
+The scoring step itself is a local formula — **free**. The only paid part of stage 2 is the optional posts pass, which runs on your strongest leads only (see the activity gate below).
 
 ## For creator sourcing, check engagement rates
 
@@ -88,7 +92,7 @@ At Maven we are identifying high potential expert creators who could sell a top-
 
 So after the base score, pull the lead's recent posts and gate on real activity:
 
-- **Dormant** (no original post in months) → even with a great title and a marquee logo like a "Founder & CEO, ex-FAANG, 5k followers", if they haven't posted since last year, it is not necessarily a great when identifying high potential creators.
+- **Dormant** (no original post in months) → even with a great title and a marquee logo like "Founder & CEO, ex-FAANG, 5k followers", if they haven't posted since last year, they aren't necessarily a strong target when you're identifying high-potential creators.
 - **Active** (posting regularly with real engagement) may lift the score.
 
 Reposts don't count in the model. Generally, this scrape costs almost nothing and removes a whole class of false positives. Make sure to define your own recency / frequency / engagement thresholds in the template.

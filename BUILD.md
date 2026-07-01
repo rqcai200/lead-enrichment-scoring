@@ -2,7 +2,7 @@
 
 This is the build spec for a low-cost lead enrichment + scoring pipeline. It's written to be handed to a coding agent (Claude Code, Codex, Cursor) and implemented end-to-end against your CRM. Read it top to bottom, make the decisions in the checklist, fill in the scoring template, then ask your agent to build it.
 
-The reference implementation it's abstracted from is in Python with `requests` and four small scripts. You can use any language — the shape is what matters.
+The reference implementation it's abstracted from is in Python with `requests` and a handful of small scripts (the six in the Components table below). You can use any language — the shape is what matters.
 
 ---
 
@@ -74,6 +74,37 @@ Print the run's spend and the score distribution every run.
 | `last_enriched_at` | timestamp of this run |
 
 **Company linking is dupe-prone** — if you link or create company records, match an existing one first (by LinkedIn URL → domain → exact name), only link on a single unambiguous hit, and stamp the created record with its LinkedIn URL so the next run matches it instead of creating a second. Skip names that already have multiple company records. If this is more than you need, just write the company **name** as text.
+
+### Mapping the scraper output to the normalized lead
+
+Your `crm.py`/`apify.py` code turns the raw actor response into the normalized dict the scorer expects. This is the shape `harvestapi/linkedin-profile-scraper` returns (illustrative — confirm against the actor's live output, which evolves):
+
+```jsonc
+{
+  "headline": "Head of AI at Example Co",
+  "about": "...bio...",
+  "currentPosition": [{ "position": "Head of AI", "companyName": "Example Co" }],
+  "experience": [
+    { "position": "Head of AI", "companyName": "Example Co",
+      "startDate": { "year": 2023, "month": "Jan" }, "endDate": { "text": "Present" } }
+  ],
+  "location": { "parsed": { "city": "Austin", "state": "Texas", "country": "United States" } },
+  "followerCount": 12000,
+  "connectionsCount": 500
+}
+```
+
+Map it to the scorer's keys:
+
+| Scraper field | → | Normalized key |
+|---------------|---|----------------|
+| `followerCount` | → | `linkedin_followers` |
+| `headline` | → | `headline` |
+| `experience[].position` (recent first) | → | `titles` |
+| `currentPosition[0].companyName` | → | `company` |
+| `location.parsed.country` | → | `country` |
+
+Twitter/Substack follower counts (from their own actors) fill `twitter_followers` / `substack_subs`. Recent posts from `harvestapi/linkedin-profile-posts` fill `recent_posts` for the activity gate.
 
 ---
 
