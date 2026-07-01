@@ -20,8 +20,8 @@ I've explored a number of enrichment tools like Clay, Crustdata, Reverse Contact
 | Provider | Pricing model | ~Cost to enrich 1 lead | vs. DIY |
 |----------|---------------|-----------------------:|--------:|
 | Clay | data credits (~4 / lead) | ~$0.18 | ~45× |
-| Crustdata | pay-as-you-go | ~$0.30 | ~75× |
-| **DIY (this guide)** | Apify usage, billed directly | **~$0.004** | **1×** |
+| Crustdata | pay-as-you-go | ~$0.1-$0.3 | ~75× |
+| **DIY (this guide)** | Apify usage, billed directly | **~$0.004** |  |
 
 That's profile enrichment. The optional posting-activity pass (see below) adds roughly $0.01, and only on your strongest leads. Refreshing an entire ~25k-contact CRM on a monthly rotation runs on the order of $100–150 of Apify usage — versus thousands on a credit-based tool.
 
