@@ -1,6 +1,6 @@
 # DIY lead enrichment and lead scoring
 
-Enrich and score inbound leads for **~$0.004 each** instead of ~$0.18 on Clay or $0.10–$0.30 on Crustdata — and refresh a ~25k-contact CRM on a monthly rotation for ~$100–150/mo instead of thousands.
+Enrich and score inbound leads for **~$0.004 each** instead of ~$0.18 on Clay or $0.10–$0.30 on Crustdata and refresh a ~25k-contact CRM on a monthly rotation for ~$100–150/mo instead of thousands.
 
 At Maven, I built our original Clay → CRM sync but the costs accumulated, running $700+/month for only 2-3k leads/month. We were growing our outbound and inbound and this simply wasn't scalable for us. So, I used Claude Code to build my own lead enrichment + lead scoring workflow which costs **$0.004 per lead**. I'm sharing this guide so you can build one yourself!
 
@@ -11,7 +11,7 @@ At Maven, I built our original Clay → CRM sync but the costs accumulated, runn
 3. **Copy [`.env.example`](.env.example) to `.env`** and fill in your tokens.
 4. **Hand `BUILD.md` to your agent** ("implement this against my CRM") and let it generate the enrich → score → write-back pipeline and the GitHub Actions workflow. A starter prompt is at the bottom of `BUILD.md`.
 
-> **Note:** This repo is a **build spec plus the one piece of real logic (the scorer), by design.** The full pipeline runs against my employer's CRM, so what's here is everything you need to regenerate it against your own — not a copy of the internal implementation.
+> **Note:** This repo is a **build spec plus the one piece of real logic (the scorer), by design.** The full pipeline runs against my employer's CRM, so what's here is everything you need to regenerate it against your own.
 
 ## CRM enrichment comparisons
 
