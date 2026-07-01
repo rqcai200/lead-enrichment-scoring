@@ -1,4 +1,4 @@
-# How to build your own enrichment and lead scoring workflow
+# How to build an enrichment and lead scoring workflow
 
 Enrich and score inbound leads for **~$0.004 each** instead of ~$0.18 on Clay or $0.10–$0.30 on Crustdata and refresh a ~25k-contact CRM on a monthly rotation for ~$100–150/mo instead of thousands.
 
