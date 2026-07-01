@@ -1,6 +1,6 @@
 # DIY lead enrichment and lead scoring
 
-At Maven, I built an in-house lead enrichment + scoring pipeline for about **$0.004 per lead** — instead of ~$0.18 on Clay or ~$0.30 on Crustdata pay-as-you-go. I built our original Clay -> CRM sync but the costs quickly accumulated, costing us $700+/month for only 2-3k leads/month. We were growing our outbound and inbound and this simply wasn't scalable for us. So, I used Claude Code to build my own lead enrichment + lead scoring workflow, and I'm sharing this guide so you can do it yourself!
+At Maven, I built our original Clay -> CRM sync but the costs accumulated, costing us $700+/month for only 2-3k leads/month. We were growing our outbound and inbound and this simply wasn't scalable for us. So, I used Claude Code to build my own lead enrichment + lead scoring workflow which costs **$0.004 per lead** — instead of ~$0.18 on Clay or $0.10-$0.30 on Crustdata. I'm sharing this guide so you can build one yourself!
 
 - ## How to use this repo
 
